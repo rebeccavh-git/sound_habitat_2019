@@ -1,0 +1,192 @@
+---
+title: "Sound_hab_nmds"
+author: "Becca Van Hoeck"
+date: "10/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setwd & load data
+
+```{r cars}
+
+library(ecodist)
+library(vegan)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+#Df_pmHT = read.csv("data/clean_data/Df_pmHT_square.csv", header = F) 
+#Df_pmHT = as.dist(Df_pmHT)
+#sites = read.csv("data/metadata/sites.csv", header = T)
+env_data = read.csv("data/clean_data/env_metrics.csv", header = TRUE)
+env_data[is.na(env_data)] = 0
+
+```
+
+## Vegan NMDS trial - pmHT site average
+
+```{r}
+# go back to matlab and calculate single average for each site - so ord has 24 points, then pair that with the env data 
+
+Df_pmHT = read.csv("data/clean_data/Df_pmHT_1_square.csv", header = F) 
+Df_pmHT = as.dist(Df_pmHT)
+Df_pmHT_metadata = read.csv("data/metadata/Df_pmHT_1_metadata.csv", header = T)
+
+nmds_1 = metaMDS(Df_pmHT, k=3, trymax = 20, autotransform = FALSE, plot = FALSE)
+
+nmdsScores = as.data.frame(scores(nmds_1))  
+nmdsScores = cbind(nmdsScores,Df_pmHT_metadata)
+nmdsScores$deploy = factor(nmdsScores$deploy)
+
+# habitat: 
+ggplot(aes(x = NMDS1, y = NMDS2, z = NMDS3, color = habitat), data = nmdsScores)+ theme_bw()+
+  geom_point(size = 3)+
+  geom_text(aes(label = site), hjust = 1.5)
+
+# Deploy alone: mostly buckshot, suggests there are deeper patterns than seasonal 
+ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
+  geom_point(size = 3, aes(color = deploy))
+
+# habitat and deploy
+ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
+  geom_point(size = 3, aes(color = habitat, shape = deploy))
+
+
+```
+
+## Environmental data
+
+```{r}
+# there are many strong correlations, for example halodule with total seagrass cover
+# I am keeping them all except for bare, which is obviously the inverse of habitat cover
+env_cor = cor(env_data[,c(4:23)])
+env_filt = env_data %>%
+  select(-index, -deploy_num.x, -site, -bare)
+
+# need to assess normality and consider transformations
+# convert to z-scores?
+
+#test with vegan envfit
+
+env_test= envfit(nmds_1, env_filt, perm = 999)
+envScores = as.data.frame(scores(env_test, "vectors"))
+colnames(envScores) = c("metric", "NMDS1", "NMDS2")
+
+# habitat and deploy
+ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
+  geom_point(size = 3, aes(color = habitat, shape = deploy))+ 
+  geom_segment(data =envScores ,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
+               arrow = arrow(length = unit(0.5, "cm")),colour="grey")+ 
+  geom_text(data=envScores,aes(x=NMDS1,y=NMDS2,label=rownames(envScores)),size=5)+
+  geom_text(aes(label = site), data = nmdsScores)
+
+
+```
+
+
+
+## Vegan NMDS trial hourly average
+For this to work - need to repeat the env data for each site so that the number of sites matches the number of spectra in Df
+ie. need 216 rows in the env_data frame
+
+```{r}
+# input is the Sound Df matrix with average hourly spectra during pmHT at each site
+# tries max of 20 random starts, finds convergence, and saves best solution 
+test_nmds = metaMDS(Df_pmHT, k=3, trymax = 20, autotransform = FALSE, plot = FALSE)
+
+# adding env scores
+test_env = envfit(test_nmds, env_data, permutations = 999)
+
+# then use ggplot to plot
+```
+
+## NMDS Trial
+This is using code from Dean Urban's Landscape Analysis course
+likely outdated and largely useds base R/ecodist
+
+To do: 
+- clean up code for ordination - maybe replace with vegan code
+- Add env vectors for the sites
+
+```{r}
+pmHT_nmds_step = nmds(Df_pmHT,nits=10, mindim=1, maxdim=6)
+attributes(pmHT_nmds_step)
+plot.nmds(pmHT_nmds_step)
+
+pmHT_nmds <- nmds(Df_pmHT,mindim=2,maxdim=2,nits=20)
+
+s.min <- which.min(pmHT_nmds$stress) # returns might be different
+pmHT_nmds$stress[s.min] # returns the stress for the best one;
+# note this is scaled on [0,1]:
+pmHT_nms <- nmds.min(pmHT_nmds,dims=2) # grabs the best of 20 reps
+
+# Rotate the NMS ordination ...
+# This forces axis 1 to have the most variance, etc.
+# how common is it to do this?
+nms.pca<-princomp(pmHT_nms)
+print(nms.pca)
+summary(nms.pca)
+pmHT_nms<-nms.pca$scores
+colnames(pmHT_nms) <- c("NMS1", "NMS2")
+
+nms3.xod<-dist(pmHT_nms)
+plot(nms3.xod,Df_pmHT,pch="*",xlab="Ordination Distance", ylab="Extended B-C Distance")
+abline(0,1,col="red") # put in the 1:1 line (intercept=0, slope=1)
+title("Shepard Diagram")
+# # and redo for only 2 axes:
+# nms2.xod<-dist(spp11.nms)
+# plot(nms2.xod,spp11.xbcd,pch="*",xlab="Ordination Distance (2D)", ylab="Extended B-C Distance")
+# abline(0,1,col="red") # put in the 1:1 line (intercept=0, slope=1)
+# title("Shepard Diagram")
+
+dev.off()
+plot(pmHT_nms[,2],pmHT_nms[,1], pch=19, cex=0.6, xlab="NMS 2", ylab="NMS 1")# main = "NMS Ordination and PAM Classification Groups")
+
+pmHT_nms_df = as.data.frame(sites$sites)
+colnames(pmHT_nms_df) = "sites"
+pmHT_nms_df$deploy = as.factor(sites$deploy)
+pmHT_nms_df$nms2 = pmHT_nms[,2]
+pmHT_nms_df$nms1 = pmHT_nms[,1]
+pmHT_nms_df$habitat = as.factor(case_when(grepl("s", pmHT_nms_df$sites) ~ "seagrass",
+                                          grepl("c", pmHT_nms_df$sites) ~ "creek",
+                                          grepl("m",pmHT_nms_df$sites) ~ "mudflat"))
+
+
+# ordellipse (vegan package)
+hab_ellipse <-ordiellipse(pmHT_nms, pmHT_nms_df$habitat, display = "sites", 
+                   kind = "se", conf = 0.95, label = T)
+
+#df_ell <- data.frame()
+#for(g in levels(pmHT_nms_df$habitat)){
+#  df_ell <- rbind(df_ell, cbind(as.data.frame(with(pmHT_nms_df[pmHT_nms_df$habitat==g,],
+#                  veganCovEllipse(pmHT_nms[[g]]$cov,pmHT_nms[[g]]$center,pmHT_nms[[g]]$scale)))
+#                                ,group=g))
+#}
+```
+
+# plotting ordination
+
+```{r}
+# habitat: also very broad, some separation among creeks and seagrass beds
+# are there traits that make a seagrass bed sound more like a creek? 
+ggplot(aes(x = nms2, y = nms1, color = habitat), data = pmHT_nms_df)+ theme_bw()+
+  geom_point(size = 3)
+
+# Deploy alone: mostly buckshot, suggests there are deeper patterns than seasonal 
+ggplot(aes(x = nms2, y = nms1), data = pmHT_nms_df)+ theme_bw()+
+  geom_point(size = 3, aes(color = deploy))
+
+# habitat and deploy
+ggplot(aes(x = nms2, y = nms1), data = pmHT_nms_df)+ theme_bw()+
+  geom_point(size = 3, aes(color = habitat, shape = deploy))
+
+# site
+ggplot(aes(x = nms2, y = nms1, color = sites), data = pmHT_nms_df)+ theme_bw()+
+  geom_point(size = 3, aes(color = sites))
+
+```
+

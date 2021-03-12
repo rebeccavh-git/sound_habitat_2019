@@ -1,0 +1,39 @@
+---
+title: "sound_hab_landscape_metrics"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Libraries
+
+```{r}
+#library(SDMTools)
+library(sp)
+library(raster)
+library(rgdal)
+library(landscapemetrics)
+library(landscapetools)
+#install.packages("rgeos")
+```
+
+## Load Data
+
+- Exported raster with a pixel size of 3.2 ft (equivalent 1m)
+Landscape metrics required meter resolution
+```{r}
+test_SG12 = raster("data/classified_raster/Classification_SG_12.tif")
+plot(test_SG12)
+
+check_landscape(test_SG12)
+show_landscape(test_SG12, discrete = TRUE)
+
+# area or class (seagrass vs sand)
+lsm_c_ca(test_SG12)
+calculate_lsm(test_SG12, 'class')
+# what is the unit on value? m^2?
+
+```
+
