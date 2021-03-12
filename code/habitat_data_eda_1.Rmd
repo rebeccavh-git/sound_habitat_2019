@@ -69,6 +69,12 @@ siteMean_pc = data.frame(gather(site_means, "identity", "perc_cover", -site, -de
 siteMean_pc$identity = factor(siteMean_pc$identity, levels = c("bare","halodule","oyster","saltmarsh",
                                                                "ruppia", "zostera", "algae", "other"))
 
+## Benthic species community metrics
+site_means$richness = apply(site_means[,c(4:10)]>0, 1, sum)
+site_means$shannonD = diversity(site_means[,c(4:10)], "shannon")
+site_means$evenness = site_means$shannonD/log(site_means$richness, base = 10)
+
+# Plotting
 ggplot(siteMean_pc, aes(x = perc_cover, y = identity, color = identity))+ theme_bw()+
   geom_point(alpha = .5, position = "jitter")+
   xlab('Percent Cover')+
@@ -76,12 +82,6 @@ ggplot(siteMean_pc, aes(x = perc_cover, y = identity, color = identity))+ theme_
   theme(axis.title = element_text(size = 14), 
         axis.text = element_text(size = 12), 
         legend.position = "none")
-
-
-## Benthic species community metrics
-site_means$richness = apply(site_means[,c(4:10)]>0, 1, sum)
-site_means$shannonD = diversity(site_means[,c(4:10)], "shannon")
-site_means$evenness = site_means$shannonD/log(site_means$richness, base = 10)
 
 ```
 
@@ -93,7 +93,6 @@ site_means$evenness = site_means$shannonD/log(site_means$richness, base = 10)
 data = data %>% mutate(seagrass= halodule+zostera+ruppia)
 
 # Summarize cover by taxa, with seagrass spp combined
-site_means_comb = data %>% 
   group_by(deploy_num,site) %>%
   summarise(bare = mean(bare), seagrass = mean(seagrass), algae = mean(algae), 
             oyster = mean(oyster), saltmarsh = mean(saltmarsh), other = mean(other))
