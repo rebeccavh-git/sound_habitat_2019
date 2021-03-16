@@ -65,24 +65,30 @@ ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
 # I am keeping them all except for bare, which is obviously the inverse of habitat cover
 env_cor = cor(env_data[,c(4:23)])
 env_filt = env_data %>%
-  select(-index, -deploy_num.x, -site, -bare)
+  select(-index, -deploy_num.x, -site, -bare, -evenness, -seagrass_comb, -shannonD_comb, -evenness_comb,
+         -totalcover, -avg_shoot_density, -avg_blade_length, -max_10, -max_25perc)
+#write.csv(env_cor,"data/clean_data/nmds_env_cor.csv")
 
 # need to assess normality and consider transformations
 # convert to z-scores?
 
 #test with vegan envfit
-
 env_test= envfit(nmds_1, env_filt, perm = 999)
 envScores = as.data.frame(scores(env_test, "vectors"))
-colnames(envScores) = c("metric", "NMDS1", "NMDS2")
+#colnames(envScores) = c("metric", "NMDS1", "NMDS2")
 
 # habitat and deploy
 ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
-  geom_point(size = 3, aes(color = habitat, shape = deploy))+ 
+  geom_point(size = 3, aes(color = habitat, shape = deploy))+
+  geom_text(aes(label = site), hjust = 1.5)+
   geom_segment(data =envScores ,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
-               arrow = arrow(length = unit(0.5, "cm")),colour="grey")+ 
-  geom_text(data=envScores,aes(x=NMDS1,y=NMDS2,label=rownames(envScores)),size=5)+
-  geom_text(aes(label = site), data = nmdsScores)
+               arrow = arrow(length = unit(0.5, "cm")),colour="black")+ 
+  geom_text(data=envScores,aes(x=NMDS1,y=NMDS2,label=rownames(envScores)),size=4)+
+  theme(panel.grid.minor = element_blank(), 
+        panel.grid.major = element_blank())+
+  geom_hline(yintercept = 0, color = "grey")+
+  geom_vline(xintercept = 0, color = "grey")
+
 
 
 ```
