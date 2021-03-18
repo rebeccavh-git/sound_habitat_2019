@@ -10,12 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Load Libraries
 
 ```{r}
-#library(SDMTools)
+library(SDMTools)
 library(sp)
 library(raster)
 library(rgdal)
-library(landscapemetrics)
-library(landscapetools)
+library(dplyr)
+#library(landscapemetrics)
+#library(landscapetools)
 #install.packages("rgeos")
 ```
 
@@ -24,16 +25,31 @@ library(landscapetools)
 - Exported raster with a pixel size of 3.2 ft (equivalent 1m)
 Landscape metrics required meter resolution
 ```{r}
-test_SG12 = raster("data/classified_raster/Classification_SG_12.tif")
-plot(test_SG12)
 
-check_landscape(test_SG12)
-show_landscape(test_SG12, discrete = TRUE)
+SG4_class = raster("data/classified_raster/SG4_classified_1m.tif")
+SG6_class = raster("data/classified_raster/SG6_classified_1m.tif")
+SG9_class = raster("data/classified_raster/SG9_classified_1m.tif")
+SG14_class = raster("data/classified_raster/SG14_classified_1m.tif")
+SG12_class = raster("data/classified_raster/SG12_classified_1m.tif")
+SG17_class = raster("data/classified_raster/SG17_classified_1m.tif")
+
+plot(SG14_class)
+
+SG_12_patch = PatchStat(SG12_class, cell = 1)
+SG_12_patch = SG_12_patch %>%
+  mutate(habitat = c("sand", "seagrass"))
+
+
+
+
+## landscapemetrics functions
+#check_landscape(test_SG12)
+#show_landscape(test_SG12, discrete = TRUE)
 
 # area or class (seagrass vs sand)
-lsm_c_ca(test_SG12)
-calculate_lsm(test_SG12, 'class')
-# what is the unit on value? m^2?
+#lsm_c_ca(test_SG12)
+#calculate_lsm(test_SG12, 'class')
+# what is the unit on value? m^2? I think its hectares?
 
 ```
 
