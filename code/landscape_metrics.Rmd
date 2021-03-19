@@ -30,37 +30,37 @@ SG4_class = raster("data/classified_raster/SG4_classified_1m.tif")
 plot(SG4_class)
 SG_4_patch = PatchStat(SG4_class, cell = 1)
 SG_4_patch = SG_4_patch %>%
-  mutate(habitat = c("seagrass","sand"))
+  mutate(habitat = c("seagrass","sand"), site= "SG_4")
 
 SG6_class = raster("data/classified_raster/SG6_classified_1m.tif")
 plot(SG6_class)
 SG_6_patch = PatchStat(SG6_class, cell = 1)
 SG_6_patch = SG_6_patch %>%
-  mutate(habitat = c("sand", "seagrass"))
+  mutate(habitat = c("sand", "seagrass"), site= "SG_6")
 
 SG9_class = raster("data/classified_raster/SG9_classified_1m.tif")
 plot(SG9_class)
 SG_9_patch = PatchStat(SG9_class, cell = 1)
 SG_9_patch = SG_9_patch %>%
-  mutate(habitat = c("sand", "seagrass"))
+  mutate(habitat = c("sand", "seagrass"), site= "SG_9")
 
 SG12_class = raster("data/classified_raster/SG12_classified_1m.tif")
 plot(SG12_class)
 SG_12_patch = PatchStat(SG12_class, cell = 1)
 SG_12_patch = SG_12_patch %>%
-  mutate(habitat = c("sand", "seagrass"))
+  mutate(habitat = c("sand", "seagrass"), site= "SG_12")
 
 SG14_class = raster("data/classified_raster/SG14_classified_1m.tif")
 plot(SG14_class)
 SG_14_patch = PatchStat(SG14_class, cell = 1)
 SG_14_patch = SG_14_patch %>%
-  mutate(habitat = c("seagrass", "sand"))
+  mutate(habitat = c("seagrass", "sand"), site= "SG_14")
 
 SG17_class = raster("data/classified_raster/SG17_classified_1m.tif")
 plot(SG17_class)
 SG_17_patch = PatchStat(SG17_class, cell = 1)
 SG_17_patch = SG_17_patch %>%
-  mutate(habitat = c("sand", "seagrass"))
+  mutate(habitat = c("sand", "seagrass"), site= "SG_17")
 
 
 
