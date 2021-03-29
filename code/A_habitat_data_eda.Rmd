@@ -15,31 +15,13 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(vegan)
-
 ```
 
 ## Load all habitat data
 
-```{r cars}
+```{r }
 #rm(list = ls())
 data = read.csv("data/clean_data/sound_habitat_data_2020.csv", header = TRUE)
-```
-
-## Summarize each transect (not used)
-
-```{r}
-# transect_means = data %>%
-#   group_by(deploy_num,site,transect) %>%
-#   summarise(bare = mean(bare), halodule = mean(halodule), zostera = mean(zostera),
-#             ruppia= mean(ruppia), algae = mean(algae), oyster = mean(oyster), spartina = mean(spartina),
-#             juncus = mean(juncus), other = mean(other))
-# 
-# percent_cover_mean = data.frame(gather(transect_means, "identity", "perc_cover", -site, - transect, -deploy_num))
-# percent_cover_mean$identity = factor(percent_cover_mean$identity)
-# 
-# ggplot(percent_cover_mean, aes(x = perc_cover, y = identity))+ theme_bw()+
-#   geom_point()
-
 ```
 
 ## Summarize each site
@@ -49,12 +31,14 @@ data = read.csv("data/clean_data/sound_habitat_data_2020.csv", header = TRUE)
 
 ```{r}
 # Average cover by each taxa at site level
+# wide form
 site_means = data %>% 
   group_by(deploy_num,site) %>%
   summarise(bare = mean(bare), halodule = mean(halodule), zostera = mean(zostera), 
             ruppia= mean(ruppia), algae = mean(algae), oyster = mean(oyster), saltmarsh = mean(saltmarsh),
             other = mean(other))
 
+#long form
 siteMean_pc = data.frame(gather(site_means, "identity", "perc_cover", -site, -deploy_num))
 siteMean_pc$identity = factor(siteMean_pc$identity, levels = c("bare","halodule","oyster","saltmarsh",
                                                                "ruppia", "zostera", "algae", "other"))
@@ -82,16 +66,16 @@ site_means$evenness = site_means$shannonD/log(site_means$richness, base = 10)
 ```{r}
 data = data %>% mutate(seagrass= halodule+zostera+ruppia)
 
-# Summarize cover by taxa, with seagrass spp combined
+# wide form
 site_means_comb = data %>% 
   group_by(deploy_num,site) %>%
   summarise(bare = mean(bare), seagrass = mean(seagrass), algae = mean(algae), 
             oyster = mean(oyster), saltmarsh = mean(saltmarsh), other = mean(other))
 
+#long form
 siteMean_pc_comb = data.frame(gather(site_means_comb, "identity", "perc_cover", -site, -deploy_num))
-siteMean_pc_comb$identity = factor(siteMean_pc_comb$identity, levels = c("bare","seagrass","oyster","saltmarsh","algae","other"))
-
-#levels(siteMean_pc_comb$identity) = c("bare","seagrass","oyster","saltmarsh","algae","other")
+siteMean_pc_comb$identity = factor(siteMean_pc_comb$identity, 
+                                   levels = c("bare","seagrass","oyster","saltmarsh","algae","other"))
 
 ggplot(siteMean_pc_comb, aes(x = perc_cover, y = identity, color = identity))+ theme_bw()+
   geom_point(alpha = .5, position = "jitter")+
@@ -136,7 +120,8 @@ total_cover = data %>%
                              grepl("Creek", site) ~ "Creek",
                              grepl("Mudflat", site) ~ "Mudflat"))
 
-ggplot(total_cover , aes(x = reorder(site, total_cover), y = total_cover, fill = Habitat, color = Habitat))+theme_bw()+
+ggplot(total_cover , aes(x = reorder(site, total_cover), y = total_cover, 
+                         fill = Habitat, color = Habitat))+theme_bw()+
   geom_col()+ 
   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = .3), 
         axis.title = element_text(size = 14),
@@ -181,8 +166,8 @@ avg_shoot_density = shoot_data %>%
   summarize(avg_shoot_density = mean(shoot.density1_16m2))
 
 ### Summarize max canopy by site then add to seagrass_site
-# Calculates site mean by averageing the max of each transect --> this is not how the cover is calculated
-# Do I ned to go back and summarize the max canopy by site more generally?
+# Calculates site mean by averaging the max of each transect --> this is not how the cover is calculated
+# Do I need to go back and summarize the max canopy by site more generally?
 max_canopy_site = seagrass_summary %>%
   group_by(site) %>%
   summarise(max_10 = mean(max_10), max_25perc = mean(max_25perc))
@@ -235,7 +220,7 @@ rep_metrics$shannonD = diversity(std_catch[,11:46], "shannon")
 rep_metrics$evenness = rep_metrics$shannonD/log(rep_metrics$richness, base = 10)
 
 # write.csv(rep_metrics, "rep_metrics.csv")
-## Manually convertered trawl replicates into rows
+## Manually converted trawl replicates into rows
 
 rep_metrics = read.csv("data/clean_data/rep_metrics.csv", header = T)
 
@@ -257,14 +242,14 @@ test_catch = test_catch %>%
 
 test_catch = distinct(test_catch)
 
-std_catch_sum = data.frame(pivot_wider(test_catch,id_cols = c(1,3,7:9), names_from = "identity",values_from = "std_abund_sum"))
-
+std_catch_sum = data.frame(pivot_wider(test_catch,id_cols = c(1,3,7:9), 
+                                       names_from = "identity",values_from = "std_abund_sum"))
 # need to follow columns here
 # Community metrics summed
-trawl_metrics  = std_catch_sum[,c(1:6)]
-trawl_metrics$total_abund_sum = rowSums(std_catch_sum[,7:42])
-trawl_metrics$comm_richness_sum = apply(std_catch_sum[,c(7:42)]>0, 1, sum)
-trawl_metrics$comm_shannonD_sum = diversity(std_catch_sum[,7:42], "shannon")
+trawl_metrics = std_catch_sum[,c(1:5)]
+trawl_metrics$total_abund_sum = rowSums(std_catch_sum[,6:41])
+trawl_metrics$comm_richness_sum = apply(std_catch_sum[,c(6:41)]>0, 1, sum)
+trawl_metrics$comm_shannonD_sum = diversity(std_catch_sum[,6:41], "shannon")
 trawl_metrics$comm_evenness_sum = trawl_metrics$comm_shannonD_sum/log(trawl_metrics$comm_richness_sum, base = 10)
 
 guild_abund = test_catch %>%
@@ -290,9 +275,8 @@ trawl_metrics = left_join(trawl_metrics, rep_metrics[,c(4,6:19)], by = "Project.
 
 ```{r}
 # need to add site names to this dataframe, they are not in the same order as the habitat variables
-spl_pmHT = as.data.frame(read.csv("avg_pmHT_spl.csv", header = TRUE))
+spl_pmHT = as.data.frame(read.csv("data/clean_data/avg_pmHT_spl.csv", header = TRUE))
 spl_pmHT_dB = cbind(spl_pmHT$site, 10*log10(spl_pmHT[,2:5]))
-
 
 ```
 
@@ -323,7 +307,6 @@ ecometrics = left_join(ecometrics, trawl_metrics, by = c("site_code"="Project.Si
 
 ecometrics = left_join(ecometrics, spl_pmHT_dB, by = c("site_code" = "spl_pmHT$site"))
 
-
 # save ecometrics dataframe as csv
 write.csv(ecometrics, "data/clean_data/ecometrics.csv")
 
@@ -347,18 +330,58 @@ round(benthic_comb_cor,3)
 ## Plots
 
 ```{r}
+ecometrics = read.csv("data/clean_data/ecometrics.csv")
+
 # add habitat label and filter to only seagrass
-ggplot(aes(x = seagrass_comb, y = avg_spl_low), data = hab_sound_data)+
+
+#Benthic metrics
+ggplot(aes(x = richness_comb, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
-ggplot(aes(x = richness_comb, y = avg_spl_low), data = hab_sound_data)+
-  geom_point()
-cor(hab_sound_data$richness_comb,hab_sound_data$avg_spl_low)
-
-ggplot(aes(x = saltmarsh, y = avg_spl_low), data = hab_sound_data)+
+ggplot(aes(x = shannonD , y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
-ggplot(aes(x = oyster, y = avg_spl_high), data = hab_sound_data)+
+ggplot(aes(x = totalcover, y = avg_spl_low, color = habitat), data = ecometrics)+ theme_bw()+
+  geom_point(size = 3)+
+  geom_smooth(method = "lm", se = FALSE)+
+  scale_color_discrete(name = "Habitat type")+
+  ylab("Average sound pressure level (db re 1 uPa")+ 
+  xlab("Average percent cover")+
+  theme(axis.text = element_text(size = 16), 
+        axis.title = element_text(size = 18), 
+        legend.title = element_text(size = 18), 
+        legend.text = element_text(size = 16))
+
+#Habitat Metrics
+ggplot(aes(x = seagrass_comb, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
+
+ggplot(aes(x = saltmarsh, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
+ggplot(aes(x = saltmarsh, y = avg_spl_high, color = habitat), data = ecometrics)+
+  geom_point()
+
+ggplot(aes(x = oyster, y = avg_spl_high, color = habitat), data = ecometrics)+
+  geom_point()
+
+ggplot(aes(x = oyster, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
+# Community metrics
+ggplot(aes(x = total_abund_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
+ggplot(aes(x = comm_shannonD_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
+ggplot(aes(x = comm_richness_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
+ggplot(aes(x = X1_Depth_m, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
+#ecometrics[is.na(ecometrics)] = 0
+#sound_eco_cor = cor(ecometrics[,c(6:24,27:62)], use = "pairwise.complete.obs")
+
 ```
-

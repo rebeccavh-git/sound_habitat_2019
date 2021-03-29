@@ -9,28 +9,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Setwd & load data
+## Load libraries
 
-```{r cars}
-
-#library(ecodist)
+```{r}
 library(vegan)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-
-#Df_pmHT = read.csv("data/clean_data/Df_pmHT_square.csv", header = F) 
-#Df_pmHT = as.dist(Df_pmHT)
-#sites = read.csv("data/metadata/sites.csv", header = T)
-env_data = read.csv("data/clean_data/env_metrics.csv", header = TRUE)
-#env_data[is.na(env_data)] = 0
-
 ```
 
 ## Vegan NMDS - pmHT site average
 
 ```{r}
-
 Df_pmHT = read.csv("data/clean_data/Df_pmHT_1_square.csv", header = F) 
 Df_pmHT = as.dist(Df_pmHT)
 Df_pmHT_metadata = read.csv("data/metadata/Df_pmHT_1_metadata.csv", header = T)
@@ -60,21 +50,25 @@ ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
 ## Add Environmental Vector
 
 ```{r}
-# there are many strong correlations, for example halodule with total seagrass cover
-# I am keeping them all except for bare, which is obviously the inverse of habitat cover
+env_data = read.csv("data/clean_data/env_metrics.csv", header = TRUE)
 env_cor = cor(env_data[,c(4:23)], use = "pairwise.complete.obs")
+#write.csv(env_cor,"data/clean_data/nmds_env_cor.csv")
+#without seagrass only metrics
 env_filt = env_data %>%
   select(-index, -deploy_num.x, -site, -bare, -evenness, -seagrass_comb, -shannonD_comb, -evenness_comb,
          -totalcover, -avg_shoot_density, -avg_blade_length, -max_10, -max_25perc)
-#write.csv(env_cor,"data/clean_data/nmds_env_cor.csv")
 
 # need to assess normality and consider transformations
 # convert to z-scores?
+env_zscores = as.data.frame(sapply(env_filt, function(env_filt) (env_filt-mean(env_filt))/sd(env_filt)))
+
 
 #test with vegan envfit
-env_test= envfit(nmds_1, env_filt, perm = 999)
+#env_test= envfit(nmds_1, env_filt, perm = 999, na.rm = TRUE)
+env_test = envfit(nmds_1 ~ halodule + zostera + ruppia + algae + oyster + saltmarsh + other + 
+                     richness + shannonD + richness_comb, data = env_zscores, perm = 999)
+env_test
 envScores = as.data.frame(scores(env_test, "vectors"))
-#colnames(envScores) = c("metric", "NMDS1", "NMDS2")
 
 # habitat and deploy
 ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
@@ -87,6 +81,31 @@ ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
         panel.grid.major = element_blank())+
   geom_hline(yintercept = 0, color = "grey")+
   geom_vline(xintercept = 0, color = "grey")
+
+# nmds with only significant env vectors
+envScoresSig = envScores[c(1,5),]
+ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
+  geom_point(size = 3, aes(color = habitat, shape = deploy))+
+  geom_text(aes(label = site), hjust = 1.5)+
+  geom_segment(data =envScoresSig ,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
+               arrow = arrow(length = unit(0.5, "cm")),colour="black")+ 
+  geom_text(data=envScoresSig,aes(x=NMDS1,y=NMDS2,label=rownames(envScoresSig)),size=4)+
+  theme(panel.grid.minor = element_blank(), 
+        panel.grid.major = element_blank())+
+  geom_hline(yintercept = 0, color = "grey")+
+  geom_vline(xintercept = 0, color = "grey")
+
+# only halodule was significant with permanova
+permanova_test = adonis(Df_pmHT ~ halodule + zostera + ruppia + algae + oyster + saltmarsh + other + 
+                          richness + shannonD + richness_comb, data = env_zscores, perm = 999) #, 
+                        #stata = Df_pmHT_metadata$habitat)
+permanova_test
+
+# Permdisp - evaluating differences between habitat types
+permdisp_test = betadisper(Df_pmHT, group = Df_pmHT_metadata$habitat)
+permdisp_test
+
+TukeyHSD(permdisp_test, conf.level = 0.95)
 
 
 # ordellipse (vegan package)
