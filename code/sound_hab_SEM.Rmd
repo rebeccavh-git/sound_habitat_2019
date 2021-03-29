@@ -25,8 +25,8 @@ library(lavaan)
 ## Setwd, load data, and explore data patterns
 
 ```{r}
-setwd("C:/Users/Becca/Documents/Grad_School/Research/Projects/Sound_Habitat/data")
-ecometrics = read.csv("ecometrics.csv", header = TRUE)
+#setwd("C:/Users/Becca/Documents/Grad_School/Research/Projects/Sound_Habitat/data")
+ecometrics = read.csv("data/clean_data/ecometrics.csv", header = TRUE)
 
 data_all = ecometrics[,c("site", "richness_comb", "comm_richness_sum", "avg_spl_low")]
 data = ecometrics[-c(2,6,10,14),] # removing mudflat
@@ -38,15 +38,17 @@ ggplot(aes(x = richness_comb, y = comm_richness_sum), data = data)+ theme_bw()+
 ggplot(aes(x = richness_comb, y = avg_spl_low), data = data)+ theme_bw()+
   geom_point(aes(color = habitat))+
   ggtitle("Relationship between habitat richness & Low frequency sound level")
+cor(data$richness_comb, data$avg_spl_low)
 
 ggplot(aes(x = comm_richness_sum, y = avg_spl_low), data = data)+ theme_bw()+
   geom_point(aes(color = habitat))+
   ggtitle("Relationship between Community richness & Low frequency sound level")
+cor(data$comm_richness_sum, data$avg_spl_low)
 
 ggplot(aes(x = totalcover, y = avg_spl_low), data = data)+ theme_bw()+
   geom_point(aes(color = habitat))+
   ggtitle("Relationship between total biogenic habitat cover & sound level")
-
+#cor(data$totalcover, data$avg_spl_low)
 
 ```
 

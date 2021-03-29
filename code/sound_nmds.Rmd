@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r cars}
 
-library(ecodist)
+#library(ecodist)
 library(vegan)
 library(dplyr)
 library(tidyr)
@@ -23,14 +23,13 @@ library(ggplot2)
 #Df_pmHT = as.dist(Df_pmHT)
 #sites = read.csv("data/metadata/sites.csv", header = T)
 env_data = read.csv("data/clean_data/env_metrics.csv", header = TRUE)
-env_data[is.na(env_data)] = 0
+#env_data[is.na(env_data)] = 0
 
 ```
 
 ## Vegan NMDS trial - pmHT site average
 
 ```{r}
-# go back to matlab and calculate single average for each site - so ord has 24 points, then pair that with the env data 
 
 Df_pmHT = read.csv("data/clean_data/Df_pmHT_1_square.csv", header = F) 
 Df_pmHT = as.dist(Df_pmHT)
@@ -63,7 +62,7 @@ ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
 ```{r}
 # there are many strong correlations, for example halodule with total seagrass cover
 # I am keeping them all except for bare, which is obviously the inverse of habitat cover
-env_cor = cor(env_data[,c(4:23)])
+env_cor = cor(env_data[,c(4:23)], use = "pairwise.complete.obs")
 env_filt = env_data %>%
   select(-index, -deploy_num.x, -site, -bare, -evenness, -seagrass_comb, -shannonD_comb, -evenness_comb,
          -totalcover, -avg_shoot_density, -avg_blade_length, -max_10, -max_25perc)

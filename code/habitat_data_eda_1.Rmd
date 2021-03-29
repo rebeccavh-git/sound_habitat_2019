@@ -374,13 +374,14 @@ ggplot(aes(x = shannonD , y = avg_spl_low, color = habitat), data = ecometrics)+
 
 ggplot(aes(x = totalcover, y = avg_spl_low, color = habitat), data = ecometrics)+ theme_bw()+
   geom_point(size = 3)+
+  geom_smooth(method = "lm", se = FALSE)+
   scale_color_discrete(name = "Habitat type")+
   ylab("Average sound pressure level (db re 1 uPa")+ 
   xlab("Average percent cover")+
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14), 
-        legend.title = element_text(size = 14), 
-        legend.text = element_text(size = 12))
+  theme(axis.text = element_text(size = 16), 
+        axis.title = element_text(size = 18), 
+        legend.title = element_text(size = 18), 
+        legend.text = element_text(size = 16))
 
 #Habitat Metrics
 ggplot(aes(x = seagrass_comb, y = avg_spl_low, color = habitat), data = ecometrics)+
