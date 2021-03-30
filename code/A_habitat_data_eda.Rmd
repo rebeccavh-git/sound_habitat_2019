@@ -269,6 +269,9 @@ trawl_metrics = left_join(trawl_metrics, guild2_abund, by = "Project.Site.Name")
 
 trawl_metrics = left_join(trawl_metrics, rep_metrics[,c(4,6:19)], by = "Project.Site.Name")
 
+# correct the site code of Mudflat A in Core Sound: MA --> MFA
+trawl_metrics[trawl_metrics == "MA"] = "MFA"
+
 ```
 
 ## Soundscape data
@@ -301,7 +304,7 @@ ecometrics = left_join(ecometrics, seagrass_all, by =  "site")
 ecometrics = subset(ecometrics, select = -c(deploy_num.y,Date))
 
 #create matching habitat variable to join habitat and trawl data
-ecometrics$site_code = c("C7","MF2","SG10","SG12","C2","MF1","SG2","SG4","CB","MA","SB","SC","C8","MF7","SG6","SG9",
+ecometrics$site_code = c("C7","MF2","SG10","SG12","C2","MF1","SG2","SG4","CB","MFA","SB","SC","C8","MF7","SG6","SG9",
                          "C4","C5","S14","S15","C3","C6","SG1","SG17") 
 ecometrics = left_join(ecometrics, trawl_metrics, by = c("site_code"="Project.Site.Name"))
 
