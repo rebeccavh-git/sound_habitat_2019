@@ -9,11 +9,49 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Things to do
-make a seagrass only dataframe with cover, canopy, and shoot data
-calculate average of 2 trawls at each site and make an ecosystem metrics dataframe (include seagrass spp and seagrass comb in 1 DF)
-repeat correlations with final dataframes
+## Load libraries and data
+```{r}
+library(ggplot2)
+library(GGally)
+library(dplyr)
+library(tidyr)
 
+ecometrics = read.csv("data/clean_data/ecometrics.csv")
+
+```
+
+## Explore correlations:
+
+```{r}
+sound_hab = ecometrics %>%
+  select(site, habitat, seagrass_comb, oyster, saltmarsh, richness, shannonD,
+         avg_shoot_density, avg_blade_length,
+        avg_spl_low, avg_spl_high)
+
+ggpairs(sound_hab[,3:11])
+
+sound_com = ecometrics %>%
+  select(site, habitat, depth_m_avg, temp_avg, sal_avg, total_abund_sum, comm_shannonD_sum, 
+         piscivore, avg_spl_low, avg_spl_high)
+
+#sound_com$log_abund = log10(sound_com$total_abund_sum)
+#plot(sound_com$total_abund_sum)
+
+ggpairs(sound_com[,3:10])
+
+# only piscivore was interesting
+# sound_trophic = ecometrics %>%
+#   select(site, habitat, carnivore, piscivore, planktivore, 
+#          avg_spl_low, avg_spl_high)
+# 
+# ggpairs(sound_trophic[,3:7])
+
+
+```
+
+## Things to do
+
+repeat correlations with final dataframes
 
 ```{r}
 benthic_cor = cor(site_means[,-c(1:2)])
@@ -27,7 +65,7 @@ round(benthic_comb_cor,3)
 ## Plots
 
 ```{r}
-ecometrics = read.csv("data/clean_data/ecometrics.csv")
+
 
 # add habitat label and filter to only seagrass
 
