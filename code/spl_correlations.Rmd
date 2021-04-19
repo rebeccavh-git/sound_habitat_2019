@@ -17,7 +17,11 @@ library(dplyr)
 library(tidyr)
 
 ecometrics = read.csv("data/clean_data/ecometrics.csv")
+ACI = read.csv("data/clean_data/avg_ACI1024.csv")
+H_entropy = read.csv("data/clean_data/avg_H1024.csv")
 
+ecometrics$ACI = ACI$avg_ACI1024
+ecometrics$entropy= H_entropy$avg_H1024
 ```
 
 ## Explore correlations:
@@ -26,9 +30,12 @@ ecometrics = read.csv("data/clean_data/ecometrics.csv")
 sound_hab = ecometrics %>%
   select(site, habitat, seagrass_comb, oyster, saltmarsh, richness, shannonD,
          avg_shoot_density, avg_blade_length,
-        avg_spl_low, avg_spl_high)
+        avg_spl_low, avg_spl_high, ACI, entropy)
 
 ggpairs(sound_hab[,3:11])
+ggpairs(sound_hab[,3:13]) # added ACI & H
+ggpairs(sound_hab, columns = c(3,4,5,6,7,8,9,10,11), 
+        mapping = aes(color = as.factor(sound_hab$habitat)))
 
 sound_com = ecometrics %>%
   select(site, habitat, depth_m_avg, temp_avg, sal_avg, total_abund_sum, comm_shannonD_sum, 
@@ -70,6 +77,9 @@ round(benthic_comb_cor,3)
 # add habitat label and filter to only seagrass
 
 #Benthic metrics
+ggplot(aes(x = richness_sso, y = avg_spl_low, color = habitat), data = ecometrics)+
+  geom_point()
+
 ggplot(aes(x = richness_comb, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 

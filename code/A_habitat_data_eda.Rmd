@@ -100,6 +100,7 @@ ggplot(seagrass_pc_long, aes(x = perc_cover, y = identity, color = identity))+ t
 site_means_comb$richness_comb = apply(site_means_comb[,c(4:8)]>0, 1, sum)
 site_means_comb$shannonD_comb = diversity(site_means[,c(4:8)], "shannon")
 site_means_comb$evenness_comb = site_means$shannonD/log(site_means$richness, base = 10)
+site_means_comb$richness_sso = apply(site_means_comb[,c(4,6,7)]>0,1,sum)
 
 ```
 
@@ -212,6 +213,10 @@ soniferous = catch_long %>%
   summarize(soniferous_S = n()) %>%
   filter(soniferous == 'Y')
 
+avg_soniferous = soniferous %>%
+  group_by(Project.Site.Name) %>%
+  summarize(avg_soniferous = mean(soniferous_S))
+
 # Community metrics
 rep_metrics  = std_catch[,c(1:5,8:10)]
 rep_metrics$total_abund = rowSums(std_catch[,11:46])
@@ -242,8 +247,15 @@ test_catch = test_catch %>%
 
 test_catch = distinct(test_catch)
 
+soniferous = test_catch %>%
+  filter(abund_sum > 0)%>%
+  group_by(Project.Site.Name, soniferous)%>%
+  summarize(soniferous_S = n()) %>%
+  filter(soniferous == 'Y')
+
 std_catch_sum = data.frame(pivot_wider(test_catch,id_cols = c(1,3,7:9), 
                                        names_from = "identity",values_from = "std_abund_sum"))
+
 # need to follow columns here
 # Community metrics summed
 trawl_metrics = std_catch_sum[,c(1:5)]
@@ -259,6 +271,10 @@ guild_abund = test_catch %>%
 guild_abund = pivot_wider(guild_abund, id_cols = 1, names_from = "guild", values_from = "guild_abund")
 
 trawl_metrics = left_join(trawl_metrics, guild_abund, by = "Project.Site.Name")
+
+trawl_metrics = left_join(trawl_metrics, soniferous, by = "Project.Site.Name")
+trawl_metrics$soniferous[is.na(trawl_metrics$soniferous)] <- "N"
+trawl_metrics$soniferous_S[is.na(trawl_metrics$soniferous_S)] <- 0
 
 guild2_abund = test_catch %>%
   group_by(Project.Site.Name,guild_secondary) %>%
@@ -299,6 +315,7 @@ ecometrics$seagrass_comb = site_means_comb$seagrass
 ecometrics$richness_comb = site_means_comb$richness_comb
 ecometrics$shannonD_comb = site_means_comb$shannonD_comb
 ecometrics$evenness_comb = site_means_comb$evenness_comb
+#ecometrics$richness_sso = site_means_comb$richness_sso
 ecometrics$totalcover = total_cover$total_cover
 ecometrics = left_join(ecometrics, seagrass_all, by =  "site")
 ecometrics = subset(ecometrics, select = -c(deploy_num.y,Date))
