@@ -116,6 +116,7 @@ TukeyHSD(permdisp_test, conf.level = 0.95)
 ## NMDS site average - within habitat variation
 - Seagrass: nothing immediately interesting at first glance. No real grouping. 
             Investigate spectra to decide if it's worth pursuing further
+            - sites separated on positive NMDS 2 all have a lower halodule:zostera ratio - 1 is even zostera dominant
 - Creek: no convergence. Not enough data. 
 - Mudflat: didn't even try. 
 
@@ -148,9 +149,9 @@ envScores_seagrass = as.data.frame(scores(env_test_seagrass, "vectors"))
 ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores_seagrass)+ theme_bw()+
   geom_point(size = 3, aes(color = deploy))+
   geom_text(aes(label = site), hjust = 1.5)+
-  geom_segment(data =envScores_seagrass ,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
-               arrow = arrow(length = unit(0.5, "cm")),colour="black")+ 
-  geom_text(data=envScores_seagrass,aes(x=NMDS1,y=NMDS2,label=rownames(envScores_seagrass)),size=4)+
+  #geom_segment(data =envScores_seagrass ,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
+  #             arrow = arrow(length = unit(0.5, "cm")),colour="black")+ 
+  #geom_text(data=envScores_seagrass,aes(x=NMDS1,y=NMDS2,label=rownames(envScores_seagrass)),size=4)+
   theme(panel.grid.minor = element_blank(), 
         panel.grid.major = element_blank())+
   geom_hline(yintercept = 0, color = "grey")+

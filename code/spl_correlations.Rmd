@@ -22,31 +22,39 @@ H_entropy = read.csv("data/clean_data/avg_H1024.csv")
 
 ecometrics$ACI = ACI$avg_ACI1024
 ecometrics$entropy= H_entropy$avg_H1024
+
+# make deployment a factor to include as a random effect
+ecometrics$deploy = factor(ecometrics$deploy_num.x)
 ```
 
 ## Explore correlations:
+1. Examine correlation within habitat/community metrics and remove redundant variables (corr > 0.7)
+2. Explore correlation between habitat/community metrics and Sound Pressure Level
 
+Start with habitat then community to reduce the number of correlations viewing at a single time
 ```{r}
+# HABITAT
 sound_hab = ecometrics %>%
-  select(site, habitat, seagrass_comb, oyster, saltmarsh, richness, shannonD,
+  select(site, habitat, totalcover, seagrass_comb, oyster, saltmarsh, richness, evenness,
          avg_shoot_density, avg_blade_length,
         avg_spl_low, avg_spl_high, ACI, entropy)
 
-ggpairs(sound_hab[,3:11])
+ggpairs(sound_hab[,3:12])
 ggpairs(sound_hab[,3:13]) # added ACI & H
 ggpairs(sound_hab, columns = c(3,4,5,6,7,8,9,10,11), 
         mapping = aes(color = as.factor(sound_hab$habitat)))
 
+# COMMUNITY
 sound_com = ecometrics %>%
-  select(site, habitat, depth_m_avg, temp_avg, sal_avg, total_abund_sum, comm_shannonD_sum, 
+  select(site, habitat, depth_m_avg, temp_avg, sal_avg, total_abund_sum, comm_richness_sum, comm_evenness_sum, 
          piscivore, avg_spl_low, avg_spl_high)
 
 #sound_com$log_abund = log10(sound_com$total_abund_sum)
 #plot(sound_com$total_abund_sum)
 
-ggpairs(sound_com[,3:10])
+ggpairs(sound_com[,3:11])
 
-# only piscivore was interesting
+## only piscivore was interesting
 # sound_trophic = ecometrics %>%
 #   select(site, habitat, carnivore, piscivore, planktivore, 
 #          avg_spl_low, avg_spl_high)
@@ -56,20 +64,39 @@ ggpairs(sound_com[,3:10])
 
 ```
 
-## Things to do
-
-repeat correlations with final dataframes
+## Build mixed model to explore variation in SPL
 
 ```{r}
-benthic_cor = cor(site_means[,-c(1:2)])
-round(benthic_cor,3)
+library(nlme)
 
-benthic_comb_cor = cor(site_means_comb[,-c(1:2)])
-round(benthic_comb_cor,3)
+# HIGH FREQUENCY - 
+#didn't include avg_blade_length even though strong correlation Possibly explore seagrass alone
+
+highMod1 = lm(avg_spl_high ~ totalcover + oyster + richness + evenness +  
+                temp_avg + sal_avg + comm_evenness_sum + piscivore + habitat, data = ecometrics)
+summary(highMod1)
+anova(highMod1)
+
+highMod2 = lm(avg_spl_high ~ totalcover + oyster +
+                temp_avg + comm_evenness_sum + habitat, data = ecometrics)
+summary(highMod2)
+anova(highMod2)
+
+highMod3 = lm(avg_spl_high ~ totalcover + oyster + temp_avg, data = ecometrics)
+summary(highMod3)
+anova(highMod3)
+
+# LOW FREQUENCY
+
+soundMod1 = lm(avg_spl_low ~ totalcover + oyster + evenness + habitat + deploy, data = ecometrics)
+summary(soundMod1)
+anova(soundMod1)
+
+
 
 ```
 
-## Plots
+## Plots exploring pairwise correlation and variation among habitat types
 
 ```{r}
 
@@ -77,13 +104,13 @@ round(benthic_comb_cor,3)
 # add habitat label and filter to only seagrass
 
 #Benthic metrics
-ggplot(aes(x = richness_sso, y = avg_spl_low, color = habitat), data = ecometrics)+
+ggplot(aes(x = richness, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
 ggplot(aes(x = richness_comb, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
-ggplot(aes(x = shannonD , y = avg_spl_low, color = habitat), data = ecometrics)+
+ggplot(aes(x = evenness , y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
 ggplot(aes(x = totalcover, y = avg_spl_low, color = habitat), data = ecometrics)+ theme_bw()+
@@ -117,7 +144,7 @@ ggplot(aes(x = oyster, y = avg_spl_low, color = habitat), data = ecometrics)+
 ggplot(aes(x = total_abund_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
-ggplot(aes(x = comm_shannonD_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
+ggplot(aes(x = comm_evenness_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
 ggplot(aes(x = comm_richness_sum, y = avg_spl_low, color = habitat), data = ecometrics)+
@@ -126,7 +153,5 @@ ggplot(aes(x = comm_richness_sum, y = avg_spl_low, color = habitat), data = ecom
 ggplot(aes(x = X1_Depth_m, y = avg_spl_low, color = habitat), data = ecometrics)+
   geom_point()
 
-#ecometrics[is.na(ecometrics)] = 0
-#sound_eco_cor = cor(ecometrics[,c(6:24,27:62)], use = "pairwise.complete.obs")
 
 ```
