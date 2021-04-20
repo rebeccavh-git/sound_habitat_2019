@@ -66,6 +66,11 @@ ggpairs(sound_com[,3:11])
 
 ## Build mixed model to explore variation in SPL
 
+1. Using predictor variables that crossed a 0.3 correlation threshold, examine simple linear model with all candidate predictors
+2. Evaluate model fit and evidence to retain or drop each predictor until a final model is reached
+
+** Need to consider whether a mixed-effects model structure is more appropriate - random effect of deployment, site? should habitat type be a fixed or random effect?, should any interactions be included?**
+
 ```{r}
 library(nlme)
 
@@ -75,6 +80,7 @@ library(nlme)
 highMod1 = lm(avg_spl_high ~ totalcover + oyster + richness + evenness +  
                 temp_avg + sal_avg + comm_evenness_sum + piscivore + habitat, data = ecometrics)
 summary(highMod1)
+drop1(highMod1)
 anova(highMod1)
 
 highMod2 = lm(avg_spl_high ~ totalcover + oyster +
