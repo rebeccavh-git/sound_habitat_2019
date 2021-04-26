@@ -19,9 +19,12 @@ library(tidyr)
 ecometrics = read.csv("data/clean_data/ecometrics.csv")
 ACI = read.csv("data/clean_data/avg_ACI1024.csv")
 H_entropy = read.csv("data/clean_data/avg_H1024.csv")
+BI = read.csv("data/clean_data/bioacousticIndex.csv")
 
 ecometrics$ACI = ACI$avg_ACI1024
 ecometrics$entropy= H_entropy$avg_H1024
+ecometrics$BI_low = BI$BI_low
+ecometrics$BI_high = BI$BI_high
 
 # make deployment a factor to include as a random effect
 ecometrics$deploy = factor(ecometrics$deploy_num.x)
@@ -34,25 +37,30 @@ ecometrics$deploy = factor(ecometrics$deploy_num.x)
 Start with habitat then community to reduce the number of correlations viewing at a single time
 ```{r}
 # HABITAT
+# sound_hab = ecometrics %>%
+#   select(site, habitat, totalcover, seagrass_comb, oyster, saltmarsh, richness, evenness,
+#          avg_shoot_density, avg_blade_length,
+#         avg_spl_low, avg_spl_high, BI_low, BI_high)
+
 sound_hab = ecometrics %>%
-  select(site, habitat, totalcover, seagrass_comb, oyster, saltmarsh, richness, evenness,
+  select(site, habitat, totalcover, oyster, saltmarsh, evenness,
          avg_shoot_density, avg_blade_length,
-        avg_spl_low, avg_spl_high, ACI, entropy)
+        avg_spl_low, avg_spl_high, BI_low, BI_high)
 
 ggpairs(sound_hab[,3:12])
-ggpairs(sound_hab[,3:13]) # added ACI & H
+#ggpairs(sound_hab[,3:13]) # added ACI & H
 ggpairs(sound_hab, columns = c(3,4,5,6,7,8,9,10,11), 
         mapping = aes(color = as.factor(sound_hab$habitat)))
 
 # COMMUNITY
 sound_com = ecometrics %>%
   select(site, habitat, depth_m_avg, temp_avg, sal_avg, total_abund_sum, comm_richness_sum, comm_evenness_sum, 
-         piscivore, avg_spl_low, avg_spl_high)
+         piscivore, avg_spl_low, avg_spl_high, BI_low, BI_high)
 
 #sound_com$log_abund = log10(sound_com$total_abund_sum)
 #plot(sound_com$total_abund_sum)
 
-ggpairs(sound_com[,3:11])
+ggpairs(sound_com[,4:13])
 
 ## only piscivore was interesting
 # sound_trophic = ecometrics %>%
@@ -72,32 +80,55 @@ ggpairs(sound_com[,3:11])
 ** Need to consider whether a mixed-effects model structure is more appropriate - random effect of deployment, site? should habitat type be a fixed or random effect?, should any interactions be included?**
 
 ```{r}
-library(nlme)
+#library(nlme)
 
 # HIGH FREQUENCY - 
 #didn't include avg_blade_length even though strong correlation Possibly explore seagrass alone
 
-highMod1 = lm(avg_spl_high ~ totalcover + oyster + richness + evenness +  
+highMod1 = lm(avg_spl_high ~ totalcover + oyster + evenness + depth_m_avg + 
                 temp_avg + sal_avg + comm_evenness_sum + piscivore + habitat, data = ecometrics)
 summary(highMod1)
 drop1(highMod1)
 anova(highMod1)
 
-highMod2 = lm(avg_spl_high ~ totalcover + oyster +
-                temp_avg + comm_evenness_sum + habitat, data = ecometrics)
+highMod2 = lm(avg_spl_high ~ totalcover + depth_m_avg + 
+                temp_avg  + comm_evenness_sum + piscivore + habitat, data = ecometrics)
 summary(highMod2)
+drop1(highMod2)
 anova(highMod2)
 
-highMod3 = lm(avg_spl_high ~ totalcover + oyster + temp_avg, data = ecometrics)
+highMod2b = lm(avg_spl_high ~ totalcover + oyster + depth_m_avg + 
+                temp_avg  + comm_evenness_sum + piscivore + habitat, data = ecometrics)
+summary(highMod2b)
+drop1(highMod2b)
+anova(highMod2b)
+
+highMod3 = lm(avg_spl_high ~ totalcover + depth_m_avg + temp_avg + habitat, data = ecometrics)
 summary(highMod3)
+drop1(highMod3)
 anova(highMod3)
+
+highMod4 = lm(avg_spl_high ~ totalcover + depth_m_avg, data = ecometrics)
+summary(highMod4)
+drop1(highMod4)
+
+AIC(highMod1, highMod2, highMod2b, highMod3, highMod4)
 
 # LOW FREQUENCY
 
-soundMod1 = lm(avg_spl_low ~ totalcover + oyster + evenness + habitat + deploy, data = ecometrics)
-summary(soundMod1)
-anova(soundMod1)
+lowMod1 = lm(avg_spl_low ~ oyster + depth_m_avg + total_abund_sum + comm_richness_sum +
+                 comm_evenness_sum + habitat, data = ecometrics)
+summary(lowMod1)
+drop1(lowMod1)
+anova(lowMod1)
 
+lowMod2 = lm(avg_spl_low ~ oyster + depth_m_avg + 
+                 comm_evenness_sum, data = ecometrics)
+summary(lowMod2)
+drop1(lowMod2)
+anova(lowMod2)
+
+AIC(lowMod1, lowMod2)
 
 
 ```
@@ -105,7 +136,6 @@ anova(soundMod1)
 ## Plots exploring pairwise correlation and variation among habitat types
 
 ```{r}
-
 
 # add habitat label and filter to only seagrass
 

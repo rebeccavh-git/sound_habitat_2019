@@ -22,6 +22,7 @@ library(ggplot2)
 
 ```{r}
 Df_pmHT = read.csv("data/clean_data/Df_pmHT_1_square.csv", header = F) 
+#Df_pmHT = read.csv("data/clean_data/Df_pmHT_1_square_median.csv", header = F) 
 Df_pmHT = as.dist(Df_pmHT)
 Df_pmHT_metadata = read.csv("data/metadata/Df_pmHT_1_metadata.csv", header = T)
 
@@ -32,7 +33,7 @@ nmdsScores = cbind(nmdsScores,Df_pmHT_metadata)
 nmdsScores$deploy = factor(nmdsScores$deploy)
 
 # habitat: 
-ggplot(aes(x = NMDS1, y = NMDS2, z = NMDS3, color = habitat), data = nmdsScores)+ theme_bw()+
+ggplot(aes(x = NMDS1, y = NMDS2, color = habitat), data = nmdsScores)+ theme_bw()+
   geom_point(size = 3)+
   geom_text(aes(label = site), hjust = 1.5)
 
@@ -84,6 +85,7 @@ ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
 
 # nmds with only significant env vectors
 envScoresSig = envScores[c(1,5),]
+#envScoresSig = envScores[c(1,4,5,10),]
 ggplot(aes(x = NMDS1, y = NMDS2), data = nmdsScores)+ theme_bw()+
   geom_point(size = 3, aes(color = habitat, shape = deploy))+
   geom_text(aes(label = site), hjust = 1.5)+

@@ -17,4 +17,3 @@ audio_file = readWave("1074286637.190516220000.wav")
 
 
 bi_low = bioacoustic_index(audio_file, min_freq = 100, max_freq = 2000, fft_w = 1024)
-3.654353
