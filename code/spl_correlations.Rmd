@@ -17,12 +17,12 @@ library(dplyr)
 library(tidyr)
 
 ecometrics = read.csv("data/clean_data/ecometrics.csv")
-ACI = read.csv("data/clean_data/avg_ACI1024.csv")
-H_entropy = read.csv("data/clean_data/avg_H1024.csv")
+#ACI = read.csv("data/clean_data/avg_ACI1024.csv")
+#H_entropy = read.csv("data/clean_data/avg_H1024.csv")
 BI = read.csv("data/clean_data/bioacousticIndex.csv")
 
-ecometrics$ACI = ACI$avg_ACI1024
-ecometrics$entropy= H_entropy$avg_H1024
+#ecometrics$ACI = ACI$avg_ACI1024
+#ecometrics$entropy= H_entropy$avg_H1024
 ecometrics$BI_low = BI$BI_low
 ecometrics$BI_high = BI$BI_high
 
@@ -72,12 +72,17 @@ ggpairs(sound_com[,4:13])
 
 ```
 
-## Build mixed model to explore variation in SPL
+## Build model to explore variation in SPL
 
 1. Using predictor variables that crossed a 0.3 correlation threshold, examine simple linear model with all candidate predictors
 2. Evaluate model fit and evidence to retain or drop each predictor until a final model is reached
 
 ** Need to consider whether a mixed-effects model structure is more appropriate - random effect of deployment, site? should habitat type be a fixed or random effect?, should any interactions be included?**
+
+Questions: 
+1. Do I need to standardize or transform predictors?
+2. How to evaluate if lm is sufficient, or should include mixed effects?
+3. How to incorporate the variable effects of habitat? Can I exclude mudflats?
 
 ```{r}
 #library(nlme)
@@ -89,30 +94,48 @@ highMod1 = lm(avg_spl_high ~ totalcover + oyster + evenness + depth_m_avg +
                 temp_avg + sal_avg + comm_evenness_sum + piscivore + habitat, data = ecometrics)
 summary(highMod1)
 drop1(highMod1)
-anova(highMod1)
 
 highMod2 = lm(avg_spl_high ~ totalcover + depth_m_avg + 
                 temp_avg  + comm_evenness_sum + piscivore + habitat, data = ecometrics)
 summary(highMod2)
 drop1(highMod2)
-anova(highMod2)
-
-highMod2b = lm(avg_spl_high ~ totalcover + oyster + depth_m_avg + 
-                temp_avg  + comm_evenness_sum + piscivore + habitat, data = ecometrics)
-summary(highMod2b)
-drop1(highMod2b)
-anova(highMod2b)
 
 highMod3 = lm(avg_spl_high ~ totalcover + depth_m_avg + temp_avg + habitat, data = ecometrics)
 summary(highMod3)
 drop1(highMod3)
-anova(highMod3)
 
 highMod4 = lm(avg_spl_high ~ totalcover + depth_m_avg, data = ecometrics)
 summary(highMod4)
 drop1(highMod4)
 
-AIC(highMod1, highMod2, highMod2b, highMod3, highMod4)
+AIC(highMod1, highMod2, highMod3, highMod4)
+anova(highMod1, highMod2, test = "F") # how to interpret this?
+
+## this doesn't work due to different sizes - missing data
+#ecometrics$highmodpredict = predict(highMod2)
+
+# Selected highMod2 due to lowest ACI, but the conf intervals for many of the effects overlap with zero
+# doesn't this suggest no effect of those variables?
+confint(highMod2)
+
+# inspect residuals
+residplot <- function(model){
+  ggplot(model,aes(x=.fitted,y=.resid))+ 
+    geom_point()+
+    labs(x="Fitted values",y="Residuals")
+  }
+
+residplot(highMod2)
+
+# inspect quantiles 
+qqplot <- function(model){
+  q1 <- ggplot(model,aes(sample=.stdresid))
+  q1+geom_point(stat="qq")+geom_abline(slope=1,intercept=0)+
+    labs(x="Theoretical Quantiles",y="Standardized residuals")
+}
+
+qqplot(highMod2)
+
 
 # LOW FREQUENCY
 
@@ -120,16 +143,19 @@ lowMod1 = lm(avg_spl_low ~ oyster + depth_m_avg + total_abund_sum + comm_richnes
                  comm_evenness_sum + habitat, data = ecometrics)
 summary(lowMod1)
 drop1(lowMod1)
-anova(lowMod1)
 
 lowMod2 = lm(avg_spl_low ~ oyster + depth_m_avg + 
                  comm_evenness_sum, data = ecometrics)
 summary(lowMod2)
 drop1(lowMod2)
-anova(lowMod2)
 
 AIC(lowMod1, lowMod2)
 
+# Selected lowMod2 for trial, but really not distinguishable by AIC
+confint(lowMod2)
+
+residplot(lowMod2)
+qqplot(lowMod2)
 
 ```
 
