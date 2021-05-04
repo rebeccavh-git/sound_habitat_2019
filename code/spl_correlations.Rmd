@@ -28,6 +28,9 @@ ecometrics$BI_high = BI$BI_high
 
 # make deployment a factor to include as a random effect
 ecometrics$deploy = factor(ecometrics$deploy_num.x)
+
+# correct habitat assignment for Seagrass C
+ecometrics$habitat[ecometrics$site_code == "SC"] = "seagrass"
 ```
 
 ## Explore correlations:
@@ -156,6 +159,35 @@ confint(lowMod2)
 
 residplot(lowMod2)
 qqplot(lowMod2)
+
+```
+
+## Variation within habitat type
+
+```{r}
+# Seagrass
+sgMetrics = ecometrics %>%
+  filter(habitat == "seagrass")
+
+sound_seagrass = sgMetrics %>%
+  select(site, habitat, totalcover, seagrass_comb, oyster, saltmarsh, richness, evenness,
+         avg_shoot_density, avg_blade_length,
+        avg_spl_low, avg_spl_high, BI_low, BI_high)
+
+ggpairs(sound_seagrass[,3:14])
+
+# # Creek
+# creekMetrics = ecometrics %>%
+#   filter(habitat == "creek")
+# 
+# sound_creek = creekMetrics %>%
+#   select(site, habitat, totalcover, seagrass_comb, oyster, saltmarsh, richness, evenness,
+#          avg_shoot_density, avg_blade_length,
+#         avg_spl_low, avg_spl_high, BI_low, BI_high)
+# 
+# ggpairs(sound_creek,3:14)
+
+
 
 ```
 
