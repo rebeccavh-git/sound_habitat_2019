@@ -127,9 +127,6 @@ residplot <- function(model){
     geom_point()+
     labs(x="Fitted values",y="Residuals")
   }
-
-residplot(highMod2)
-
 # inspect quantiles 
 qqplot <- function(model){
   q1 <- ggplot(model,aes(sample=.stdresid))
@@ -137,8 +134,9 @@ qqplot <- function(model){
     labs(x="Theoretical Quantiles",y="Standardized residuals")
 }
 
+residplot(highMod2)
 qqplot(highMod2)
-
+confint(highMod2)
 
 # LOW FREQUENCY 
 #should I include interaction between habitat and total cover?
