@@ -52,8 +52,8 @@ sound_hab = ecometrics %>%
 
 ggpairs(sound_hab[,3:12])
 #ggpairs(sound_hab[,3:13]) # added ACI & H
-ggpairs(sound_hab, columns = c(3,4,5,6,7,8,9,10,11), 
-        mapping = aes(color = as.factor(sound_hab$habitat)))
+#ggpairs(sound_hab, columns = c(3,4,5,6,7,8,9,10,11), 
+#        mapping = aes(color = as.factor(sound_hab$habitat)))
 
 # COMMUNITY
 sound_com = ecometrics %>%
@@ -140,7 +140,8 @@ qqplot <- function(model){
 qqplot(highMod2)
 
 
-# LOW FREQUENCY
+# LOW FREQUENCY 
+#should I include interaction between habitat and total cover?
 
 lowMod1 = lm(avg_spl_low ~ oyster + depth_m_avg + total_abund_sum + comm_richness_sum +
                  comm_evenness_sum + habitat, data = ecometrics)
