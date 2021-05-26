@@ -26,7 +26,7 @@ Df_pmHT = read.csv("data/clean_data/Df_pmHT_1_square.csv", header = F)
 Df_pmHT = as.dist(Df_pmHT)
 Df_pmHT_metadata = read.csv("data/metadata/Df_pmHT_1_metadata.csv", header = T)
 
-nmds_1 = metaMDS(Df_pmHT, k=3, trymax = 20, autotransform = FALSE, plot = FALSE)
+nmds_1 = metaMDS(Df_pmHT, k=2, trymax = 20, autotransform = FALSE, plot = FALSE)
 
 nmdsScores = as.data.frame(scores(nmds_1))  
 nmdsScores = cbind(nmdsScores,Df_pmHT_metadata)
@@ -113,6 +113,77 @@ TukeyHSD(permdisp_test, conf.level = 0.95)
 # ordellipse (vegan package)
 #hab_ellipse <-ordiellipse(pmHT_nms, pmHT_nms_df$habitat, display = "sites", 
 #                   kind = "se", conf = 0.95, label = T)
+```
+
+## Cluster
+
+```{r}
+library(cluster)
+library(ecodist)
+
+sdf_agnes = agnes(Df_pmHT, diss = T)
+plot(sdf_agnes)
+summary(sdf_agnes)
+
+sdf_agnes_levels = cutree(sdf_agnes, k=2:10)
+
+
+# I don't follow this code from ENV 724 class
+clusterlevel = function(edist,groups)  
+{
+  require(ecodist)
+  nl <- ncol(groups)
+  NC<-rep(NA,nl)
+  MR<-rep(NA,nl)
+  P<-rep(NA,nl)
+  outtable<-data.frame(cbind(NC,MR,P))
+  for (i in 1:nl) {
+    # number of groups at this level:
+    cl <- length(unique(groups[,i]))
+    # create group contrast:
+    gdist <- dist(groups[,i])
+    gdist[gdist!=0] <- 1
+    # run mantel:
+    m <- mantel(edist~gdist, nperm = 10000, nboot = 0) 
+    outtable[i,1] <- cl
+    outtable[i,2] <- m[1]
+    outtable[i,3] <- m[2]
+  }                                 
+  return(outtable)
+}
+
+sdf_agnes_cl = clusterlevel(Df_pmHT, sdf_agnes_levels)
+plot(sdf_agnes_cl[,1],sdf_agnes_cl[,2],xlab="Number of Groups", ylab="Mantel R", type="b", lwd=2,pch=19)
+
+clabel<-sdf_agnes_levels[,3] # this is 6 groups (skipping single-group case)
+
+# you should manually set clabel = 1, 2, 3, to get 2, 3, 4 ...
+# groups, and look at each of them with the code below.
+# then go back and reset clabel to the 4th column (5 groups) or
+# whichever number of groups you want to use for the rest of this. 
+
+# Plot them:
+plot(nmds_1[,2],nmds_1[,1],pch=as.character(clabel),cex=0.8,col=clabel, xlab="NMS 2", ylab="NMS 1")
+# ... and add species labels and env vectors as above, if desired ...
+# mean species abundances per cluster:
+spp11.agnes.xspp <- aggregate(spp11.data[,-1],list(clabel),mean)
+# Assign a cluster group for each species 
+# (the group wherein it reaches its maximum abundance):
+spp.max.clx<-apply(spp11.agnes.xspp,2,which.max)
+text(spp11.wa[,2:1],rownames(spp11.wa),cex=0.8,col=spp.max.clx[-1])
+# This colors the species names the same as the groups they represent.
+# Add the environmental vectors:
+plot.vf(spp11.nms.vf, pval=0.05, col="red", length=0.067)
+
+# average environmental conditions per cluster (for interpretation):
+spp11.agnes.xenv <- aggregate(env17.data[,-1],list(clabel),mean)
+spp11.agnes.xenv
+
+# generate some output tables for report writing, by 
+# transposing the tables of mean SPP and ENV ...
+# (in Excel, fix the column headers):
+write.csv(t(spp11.agnes.xspp),"spp11_agnes_xspp.csv")
+write.csv(t(spp11.agnes.xenv),"spp11_agnes_xenv.csv")
 ```
 
 ## NMDS site average - within habitat variation

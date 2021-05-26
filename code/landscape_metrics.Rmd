@@ -15,53 +15,222 @@ library(sp)
 library(raster)
 library(rgdal)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(rasterVis)
 
 #install.packages("rgeos")
 ```
 
-## Load Data
-
+## Seagrass metrics
 - Exported raster with a pixel size of 3.2 ft (equivalent 1m)
 Landscape metrics required meter resolution
 ```{r}
-SG4_class = raster("data/classified_raster/SG4_classified_1m.tif")
-plot(SG4_class)
+#SG1 - manually identified habitats
+SG1_class = raster('data/classified_raster/Classification_Seagrass_1_image2.tif')
+#plot(SG1_class)
+# calculate metrics
+SG_1_patch = PatchStat(SG1_class, cell = 1) 
+# manually add habitat classification titles from arcmap order 
+SG_1_patch = SG_1_patch %>% 
+  mutate(habitat = c("mudflat","seagrass", "saltmarsh", "oyster","sand"), site= "SG1")
+
+#SG2 - manually identified habitats
+SG2_class = raster("data/classified_raster/Classification_Seagrass_2_image.tif")
+#plot(SG2_class)
+SG_2_patch = PatchStat(SG2_class, cell = 1)
+SG_2_patch = SG_2_patch %>%
+  mutate(habitat = c("seagrass", "sand", "channel", "saltmarsh", "oyster"), site= "SG2")
+
+#SG 4 - manually identified habitats
+SG4_class = raster("data/classified_raster/Classification_Seagrass_4_image.tif")
+#plot(SG4_class)
 SG_4_patch = PatchStat(SG4_class, cell = 1)
 SG_4_patch = SG_4_patch %>%
-  mutate(habitat = c("seagrass","sand"), site= "SG_4")
+  mutate(habitat = c("land", "seagrass", "channel", "sand", "oyster"), site= "SG4")
 
-SG6_class = raster("data/classified_raster/SG6_classified_1m.tif")
-plot(SG6_class)
+#SG 6 
+SG6_class = raster("data/classified_raster/Classification_Seagrass_6_image.tif")
+#plot(SG6_class)
 SG_6_patch = PatchStat(SG6_class, cell = 1)
 SG_6_patch = SG_6_patch %>%
-  mutate(habitat = c("sand", "seagrass"), site= "SG_6")
+  mutate(habitat = c("sand","seagrass", "oyster","saltmarsh"), site= "SG6")
 
-SG9_class = raster("data/classified_raster/SG9_classified_1m.tif")
-plot(SG9_class)
+#SG 9
+SG9_class = raster("data/classified_raster/Classification_Seagrass_9_image.tif")
+#plot(SG9_class)
 SG_9_patch = PatchStat(SG9_class, cell = 1)
 SG_9_patch = SG_9_patch %>%
-  mutate(habitat = c("sand", "seagrass"), site= "SG_9")
+  mutate(habitat = c("sand", "saltmarsh", "oyster", "seagrass"), site= "SG9")
 
-SG12_class = raster("data/classified_raster/SG12_classified_1m.tif")
-plot(SG12_class)
+#SG 10
+SG10_class = raster("data/classified_raster/Classification_Seagrass_10_image.tif")
+#plot(SG10_class)
+SG_10_patch = PatchStat(SG10_class, cell = 1)
+SG_10_patch = SG_10_patch %>%
+  mutate(habitat = c("sand", "seagrass"), site= "SG10")
+
+#SG 12
+SG12_class = raster("data/classified_raster/Classification_Seagrass_12_image.tif")
+#plot(SG12_class)
 SG_12_patch = PatchStat(SG12_class, cell = 1)
 SG_12_patch = SG_12_patch %>%
-  mutate(habitat = c("sand", "seagrass"), site= "SG_12")
+  mutate(habitat = c("saltmarsh","oyster", "sand","seagrass"), site= "SG12")
 
-SG14_class = raster("data/classified_raster/SG14_classified_1m.tif")
-plot(SG14_class)
+#SG 14
+SG14_class = raster("data/classified_raster/Classification_Seagrass_14_image.tif")
+#plot(SG14_class)
 SG_14_patch = PatchStat(SG14_class, cell = 1)
 SG_14_patch = SG_14_patch %>%
-  mutate(habitat = c("seagrass", "sand"), site= "SG_14")
+  mutate(habitat = c("sand","seagrass"), site= "S14")
 
-SG17_class = raster("data/classified_raster/SG17_classified_1m.tif")
-plot(SG17_class)
+#SG 15 - manually identified habitats
+SG15_class = raster("data/classified_raster/Classification_Seagrass_15_image.tif")
+#plot(SG15_class)
+SG_15_patch = PatchStat(SG15_class, cell = 1)
+SG_15_patch = SG_15_patch %>%
+  mutate(habitat = c("oyster", "seagrass", "saltmarsh", "land", "sand"), site= "S15")
+
+#SG 17
+SG17_class = raster("data/classified_raster/Classification_Seagrass_17_image.tif")
+#plot(SG17_class)
 SG_17_patch = PatchStat(SG17_class, cell = 1)
 SG_17_patch = SG_17_patch %>%
-  mutate(habitat = c("sand", "seagrass"), site= "SG_17")
+  mutate(habitat = c("land","saltmarsh","oyster","seagrass","sand"), site= "SG17")
 
+#SG B
+SGB_class = raster("data/classified_raster/Classification_Seagrass_B_image.tif")
+#plot(SGB_class)
+SG_B_patch = PatchStat(SGB_class, cell = 1)
+SG_B_patch = SG_B_patch %>%
+  mutate(habitat = c("seagrass","saltmarsh","sand"), site= "SB")
+
+#SG C
+SGC_class = raster("data/classified_raster/Classification_Seagrass_C_image.tif")
+#plot(SGC_class)
+SG_C_patch = PatchStat(SGC_class, cell = 1)
+SG_C_patch = SG_C_patch %>%
+  mutate(habitat = c("seagrass","sand"), site= "SC")
+
+```
+
+## Creek
+
+```{r}
+
+# C2
+C2_class = raster("data/classified_raster/Classification_Creek_2_image.tif")
+#plot(C2_class)
+C_2_patch = PatchStat(C2_class, cell = 1)
+C_2_patch = C_2_patch %>%
+  mutate(habitat = c("saltmarsh", "seagrass", "oyster", "sand"), site= "C2")
+
+# C3
+C3_class = raster("data/classified_raster/Classification_Creek_3_image.tif")
+#plot(C3_class)
+C_3_patch = PatchStat(C3_class, cell = 1)
+C_3_patch = C_3_patch %>%
+  mutate(habitat = c("sand", "seagrass", "oyster", "saltmarsh"), site= "C3")
+
+# C4
+C4_class = raster("data/classified_raster/Classification_Creek_4_image.tif")
+#plot(C4_class)
+C_4_patch = PatchStat(C4_class, cell = 1)
+C_4_patch = C_4_patch %>%
+  mutate(habitat = c("saltmarsh", "oyster", "sand", "channel"), site= "C4")
+
+# C5 - manually identified habitats
+C5_class = raster("data/classified_raster/Classification_Creek_5_image.tif")
+#plot(C5_class)
+C_5_patch = PatchStat(C5_class, cell = 1)
+C_5_patch = C_5_patch %>%
+  mutate(habitat = c("saltmarsh", "sand", "seagrass", "oyster"), site= "C5")
+
+# C6
+C6_class = raster("data/classified_raster/Classification_Creek_6_image.tif")
+#plot(C6_class)
+C_6_patch = PatchStat(C6_class, cell = 1)
+C_6_patch = C_6_patch %>%
+  mutate(habitat = c("land", "seagrass", "saltmarsh", "oyster", "sand"), site= "C6")
+
+# C7 - manually identified habitats
+C7_class = raster("data/classified_raster/Classification_Creek_7_image.tif")
+#plot(C7_class)
+C_7_patch = PatchStat(C7_class, cell = 1)
+C_7_patch = C_7_patch %>%
+  mutate(habitat = c("saltmarsh", "sand", "land", "mudflat", "oyster"), site= "C7")
+
+# C8 - manually identified habitats
+C8_class = raster("data/classified_raster/Classification_Creek_8_image.tif")
+#plot(C8_class)
+C_8_patch = PatchStat(C8_class, cell = 1)
+C_8_patch = C_8_patch %>%
+  mutate(habitat = c("saltmarsh", "mudflat", "land", "oyster", "sand", "seagrass"), site= "C8")
+
+# CB
+CB_class = raster("data/classified_raster/Classification_Creek_B_image.tif")
+#plot(CB_class)
+C_B_patch = PatchStat(CB_class, cell = 1)
+C_B_patch = C_B_patch %>%
+  mutate(habitat = c("seagrass", "saltmarsh", "sand", "oyster"), site= "C_B")
+
+```
+
+# Mudflat
+
+```{r}
+
+# M1
+M1_class = raster("data/classified_raster/Classification_Mudflat_1_image.tif")
+#plot(M1_class)
+M_1_patch = PatchStat(M1_class, cell = 1)
+M_1_patch = M_1_patch %>%
+  mutate(habitat = c("mudflat", "seagrass", "saltmarsh", "oyster", "sand"), site= "MF1")
+
+# M2 - manually identified habitats
+M2_class = raster("data/classified_raster/Classification_Mudflat_2_image.tif")
+#plot(M2_class)
+M_2_patch = PatchStat(M2_class, cell = 1)
+M_2_patch = M_2_patch %>%
+  mutate(habitat = c("sand", "oyster", "seagrass", "saltmarsh"), site= "MF2")
+
+# M7
+M7_class = raster("data/classified_raster/Classification_Mudflat_7_image.tif")
+#plot(M7_class)
+M_7_patch = PatchStat(M7_class, cell = 1)
+M_7_patch = M_7_patch %>%
+  mutate(habitat = c("saltmarsh", "land", "oyster", "seagrass", "sand"), site= "MF7")
+
+# MA
+MA_class = raster("data/classified_raster/Classification_Mudflat_A_image.tif")
+#plot(MA_class)
+M_A_patch = PatchStat(MA_class, cell = 1)
+M_A_patch = M_A_patch %>%
+  mutate(habitat = c("sand", "channel"), site= "MFA")
+
+```
+
+# Organize to add to ecometrics
+
+```{r}
+
+landAll = rbind(SG_1_patch,SG_2_patch,SG_4_patch,SG_6_patch,SG_9_patch,SG_10_patch,
+                SG_12_patch,SG_14_patch,SG_15_patch,SG_17_patch,SG_B_patch, SG_C_patch,
+                C_2_patch,C_3_patch,C_4_patch,C_5_patch,C_6_patch,C_7_patch,C_8_patch,C_B_patch,
+                M_1_patch,M_2_patch,M_7_patch,M_A_patch)
+
+
+land_long = landAll %>%
+  pivot_longer(cols = c(area, core.area, perimeter, perim.area.ratio, shape.index), 
+               names_to = c("metric")) %>%
+  data.frame()
+land_long = land_long[,c(8:11)]
+
+land_wide = land_long %>%
+  pivot_wider(id_cols = "site", names_from = c("habitat","metric"), names_sep = "_", values_from = "value", values_fill = 0) %>%
+  mutate(total_hab_area = sum(seagrass_area, saltmarsh_area, oyster_area))
+
+write.csv(land_wide, file = "data/clean_data/landscape_metrics.csv")
 
 
 ```

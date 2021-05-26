@@ -55,7 +55,10 @@ ggplot(siteMean_pc, aes(x = perc_cover, y = identity, color = identity))+ theme_
 ## Benthic species community metrics
 site_means$richness = apply(site_means[,c(4:10)]>0, 1, sum)
 site_means$shannonD = diversity(site_means[,c(4:10)], "shannon")
-site_means$evenness = site_means$shannonD/log(site_means$richness, base = 10)
+site_means$simpsonD = diversity(site_means[,c(4:10)],"simpson")
+#site_means$evenness = site_means$shannonD/log(site_means$richness, base = 10)
+site_means$evenness = site_means$shannonD/log(site_means$richness, base = 2)
+
 
 ```
 
@@ -99,7 +102,7 @@ ggplot(seagrass_pc_long, aes(x = perc_cover, y = identity, color = identity))+ t
 ## Benthic species community metrics
 site_means_comb$richness_comb = apply(site_means_comb[,c(4:8)]>0, 1, sum)
 site_means_comb$shannonD_comb = diversity(site_means[,c(4:8)], "shannon")
-site_means_comb$evenness_comb = site_means$shannonD/log(site_means$richness, base = 10)
+site_means_comb$evenness_comb = site_means$shannonD/log(site_means$richness, base = 2)
 site_means_comb$richness_sso = apply(site_means_comb[,c(4,6,7)]>0,1,sum)
 
 ```
@@ -222,7 +225,7 @@ rep_metrics  = std_catch[,c(1:5,8:10)]
 rep_metrics$total_abund = rowSums(std_catch[,11:46])
 rep_metrics$richness = apply(std_catch[,c(11:46)]>0, 1, sum)
 rep_metrics$shannonD = diversity(std_catch[,11:46], "shannon")
-rep_metrics$evenness = rep_metrics$shannonD/log(rep_metrics$richness, base = 10)
+rep_metrics$evenness = rep_metrics$shannonD/log(rep_metrics$richness, base = 2)
 
 # write.csv(rep_metrics, "rep_metrics.csv")
 ## Manually converted trawl replicates into rows
@@ -262,7 +265,7 @@ trawl_metrics = std_catch_sum[,c(1:5)]
 trawl_metrics$total_abund_sum = rowSums(std_catch_sum[,6:41])
 trawl_metrics$comm_richness_sum = apply(std_catch_sum[,c(6:41)]>0, 1, sum)
 trawl_metrics$comm_shannonD_sum = diversity(std_catch_sum[,6:41], "shannon")
-trawl_metrics$comm_evenness_sum = trawl_metrics$comm_shannonD_sum/log(trawl_metrics$comm_richness_sum, base = 10)
+trawl_metrics$comm_evenness_sum = trawl_metrics$comm_shannonD_sum/log(trawl_metrics$comm_richness_sum, base = 2)
 
 guild_abund = test_catch %>%
   group_by(Project.Site.Name,guild) %>%
@@ -322,7 +325,7 @@ ecometrics = subset(ecometrics, select = -c(deploy_num.y,Date))
 
 #create matching habitat variable to join habitat and trawl data
 ecometrics$site_code = c("C7","MF2","SG10","SG12","C2","MF1","SG2","SG4","CB","MFA","SB","SC","C8","MF7","SG6","SG9",
-                         "C4","C5","S14","S15","C3","C6","SG1","SG17") 
+                         "C4","C5","S14","S15","C3","C6","SG1","SG17")
 ecometrics = left_join(ecometrics, trawl_metrics, by = c("site_code"="Project.Site.Name"))
 
 ecometrics = left_join(ecometrics, spl_pmHT_dB, by = c("site_code" = "spl_pmHT$site"))

@@ -15,22 +15,34 @@ library(ggplot2)
 library(GGally)
 library(dplyr)
 library(tidyr)
+#install.packages("readr")
 
 ecometrics = read.csv("data/clean_data/ecometrics.csv")
 #ACI = read.csv("data/clean_data/avg_ACI1024.csv")
 #H_entropy = read.csv("data/clean_data/avg_H1024.csv")
 BI = read.csv("data/clean_data/bioacousticIndex.csv")
+# need to correct averaging method for these average SPLs in smaller low f bins
+#splAvgLowBins = read.csv("data/clean_data/splAvgLowBins.csv")
 
 #ecometrics$ACI = ACI$avg_ACI1024
 #ecometrics$entropy= H_entropy$avg_H1024
 ecometrics$BI_low = BI$BI_low
 ecometrics$BI_high = BI$BI_high
+#ecometrics$splLlow = splAvgLowBins$splAvgLlow
+#ecometrics$splMlow = splAvgLowBins$splAvgMlow
 
 # make deployment a factor to include as a random effect
 ecometrics$deploy = factor(ecometrics$deploy_num.x)
 
 # correct habitat assignment for Seagrass C
 ecometrics$habitat[ecometrics$site_code == "SC"] = "seagrass"
+
+landscapeMetrics = read.csv("data/clean_data/landscape_metrics.csv", header = TRUE)
+landscapeMetrics = landscapeMetrics %>%
+  mutate(habitat_total = seagrass_area+saltmarsh_area+oyster_area)
+ecometrics = left_join(ecometrics, landscapeMetrics, by = c("site_code" = "site"))
+
+
 ```
 
 ## Explore correlations:
@@ -43,7 +55,7 @@ Start with habitat then community to reduce the number of correlations viewing a
 # sound_hab = ecometrics %>%
 #   select(site, habitat, totalcover, seagrass_comb, oyster, saltmarsh, richness, evenness,
 #          avg_shoot_density, avg_blade_length,
-#         avg_spl_low, avg_spl_high, BI_low, BI_high)
+#         avg_spl_low, splLlow, splMlow, avg_spl_high) #, #BI_low, BI_high)
 
 sound_hab = ecometrics %>%
   select(site, habitat, totalcover, oyster, saltmarsh, evenness,
@@ -63,7 +75,7 @@ sound_com = ecometrics %>%
 #sound_com$log_abund = log10(sound_com$total_abund_sum)
 #plot(sound_com$total_abund_sum)
 
-ggpairs(sound_com[,4:13])
+ggpairs(sound_com[,3:13])
 
 ## only piscivore was interesting
 # sound_trophic = ecometrics %>%
@@ -71,6 +83,34 @@ ggpairs(sound_com[,4:13])
 #          avg_spl_low, avg_spl_high)
 # 
 # ggpairs(sound_trophic[,3:7])
+
+```
+
+## Landscape metrics
+
+```{r}
+
+sound_land = ecometrics %>%
+  select(avg_spl_low, avg_spl_high, BI_low, BI_high)
+sound_land = ecometrics[,c(60:104)]
+sound_land = sound_land[,c(1,4,9:45)]
+
+ggpairs(sound_land[,c(1:10)])
+ggpairs(sound_land[,c(1,2,11:20)])
+ggpairs(sound_land[,c(1,2,21:30)])
+ggpairs(sound_land[,c(1,2,31:39)])
+
+
+# Still need to check redundancy and remove
+# lots of correlations with sand & channel - need to consider
+
+# Low Frequency 
+# neg cor: seagrass core area
+# pos cor: saltmarsh area, saltmarsh core area, saltmarsh perimeter, oyster area, oyster core area, oyster perimeter, oyster perim/area ratio, oyster shape, habitat total
+
+# High Frequency
+# neg cor: 
+# pos cor: seagrass perimeter, seagrass shape index, saltmarsh area, saltmarsh core, oyster area, oyster core, oyster perimeter, oyster shape, habitat total
 
 
 ```
@@ -95,24 +135,15 @@ Questions:
 
 highMod1 = lm(avg_spl_high ~ totalcover + oyster + evenness + depth_m_avg + 
                 temp_avg + sal_avg + comm_evenness_sum + piscivore + habitat, data = ecometrics)
-summary(highMod1)
-drop1(highMod1)
 
-highMod2 = lm(avg_spl_high ~ totalcover + depth_m_avg + 
-                temp_avg  + comm_evenness_sum + piscivore + habitat, data = ecometrics)
-summary(highMod2)
-drop1(highMod2)
 
-highMod3 = lm(avg_spl_high ~ totalcover + depth_m_avg + temp_avg + habitat, data = ecometrics)
-summary(highMod3)
-drop1(highMod3)
+#re-level habitat to mudflat as base case: 
+spl ~ creek + creek_cover + seagrass + seagrasscover
 
-highMod4 = lm(avg_spl_high ~ totalcover + depth_m_avg, data = ecometrics)
-summary(highMod4)
-drop1(highMod4)
-
-AIC(highMod1, highMod2, highMod3, highMod4)
-anova(highMod1, highMod2, test = "F") # how to interpret this?
+# recommendation: 
+# build ecologicaly reasonable models 
+# possibility incorporate "biotic effects", "env effects" or not... 
+# then compare or average the models
 
 ## this doesn't work due to different sizes - missing data
 #ecometrics$highmodpredict = predict(highMod2)
